@@ -1,0 +1,1564 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#B08D4F">
+<title>Simulasi HPP — Scentia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+:root{
+  --bg:#FDFCFA; --text:#1C1A17; --muted:#57524A; --border:#E7E1D8;
+  --gold:#B08D4F; --gold-l:#D4B875; --gold-d:#8C6E3A;
+  --warn-bg:#fffbf0; --warn-border:#f59e0b; --warn-soft:#fef3c7; --warn-text:#92400e;
+  --danger:#b91c1c; --success:#059669;
+}
+*{box-sizing:border-box;font-family:'Plus Jakarta Sans',sans-serif;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--text);line-height:1.5;min-height:100vh;overflow-x:hidden}
+button,input,select,textarea{font-family:inherit;font-size:14px}
+.hidden{display:none !important}
+.font-serif{font-family:'Playfair Display',serif}
+
+.site-header{background:#fff;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:40;box-shadow:0 1px 3px rgba(0,0,0,0.03)}
+.header-inner{max-width:1240px;margin:0 auto;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:68px;gap:16px}
+.hdr-brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text);flex-shrink:0;min-width:0}
+.hdr-logo{width:42px;height:42px;border-radius:10px;background:linear-gradient(135deg,var(--gold-l),var(--gold));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:18px;overflow:hidden;flex-shrink:0;box-shadow:0 2px 6px rgba(176,141,79,0.25)}
+.hdr-logo img{width:100%;height:100%;object-fit:cover}
+.hdr-brand-text{display:flex;flex-direction:column;line-height:1.15;min-width:0}
+.hdr-brand-text span:first-child{font-family:'Playfair Display',serif;font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hdr-brand-text span:last-child{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--gold);white-space:nowrap}
+.hdr-nav{display:flex;align-items:center;gap:4px}
+.hdr-nav a{color:var(--muted);text-decoration:none;font-size:13px;font-weight:500;padding:8px 12px;border-radius:6px;transition:.2s;white-space:nowrap}
+.hdr-nav a:hover{background:#F7F4EE;color:var(--text)}
+.hdr-nav a.hdr-back{background:linear-gradient(135deg,var(--gold-l),var(--gold));color:#fff;font-weight:600;margin-left:8px;padding:8px 16px;box-shadow:0 2px 6px rgba(176,141,79,0.25)}
+.hdr-nav a.hdr-back:hover{transform:translateY(-1px);box-shadow:0 4px 10px rgba(176,141,79,0.35);color:#fff}
+.hdr-menu-btn{display:none;background:#fff;border:1px solid var(--border);border-radius:8px;width:42px;height:42px;cursor:pointer;color:var(--text);font-size:20px;align-items:center;justify-content:center}
+.hdr-mobile-overlay{display:none;position:fixed;inset:0;background:rgba(28,26,23,0.5);z-index:41;backdrop-filter:blur(2px)}
+.hdr-mobile-overlay.show{display:block}
+
+.main{max-width:1240px;margin:0 auto;padding:24px 20px 60px}
+.page-title{font-family:'Playfair Display',serif;font-weight:700;font-size:26px;margin-bottom:6px}
+.page-subtitle{font-size:14px;color:var(--muted);margin-bottom:24px}
+
+.layout{display:grid;grid-template-columns:1fr 340px;gap:24px}
+.layout > div{min-width:0}
+
+.card{background:#fff;border:1px solid var(--border);border-radius:12px;margin-bottom:16px;overflow:hidden}
+.card-header{padding:16px 20px;border-bottom:1px solid var(--border);font-weight:700;font-size:14px;background:var(--bg);display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.card-body{padding:20px}
+
+.lbl{display:block;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.4px}
+.inp{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;color:var(--text);background:#fff;transition:.2s;min-height:42px}
+.inp:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(176,141,79,0.15)}
+.inp-required{background:var(--warn-bg) !important;border-color:var(--warn-border) !important}
+select.inp{cursor:pointer;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2357524A' d='M6 9L1 4h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;-webkit-appearance:none;-moz-appearance:none;appearance:none}
+textarea.inp{resize:vertical;min-height:60px}
+
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
+
+.req-badge{display:inline-block;background:var(--warn-soft);color:var(--warn-text);font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;text-transform:uppercase;letter-spacing:0.4px;margin-left:6px;border:1px solid #fcd34d;vertical-align:middle}
+
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{padding:8px 14px;border:1.5px solid var(--border);background:#fff;border-radius:8px;font-size:12px;cursor:pointer;color:var(--text);transition:.15s;text-align:left;line-height:1.4}
+.chip:hover{border-color:var(--gold-l);background:#F7F4EE}
+.chip.active{border-color:var(--gold);background:#F7F4EE;color:var(--gold);font-weight:600}
+.chips-required{padding:10px;background:var(--warn-bg);border:1px dashed var(--warn-border);border-radius:8px}
+
+.btn{padding:10px 18px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;border:none;transition:.2s;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:42px;text-decoration:none}
+.btn-primary{background:linear-gradient(135deg,var(--gold-l),var(--gold));color:#fff;box-shadow:0 2px 6px rgba(176,141,79,0.3)}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 10px rgba(176,141,79,0.4)}
+.btn-outline{background:#fff;color:var(--text);border:1px solid var(--border)}
+.btn-outline:hover{background:#F7F4EE;border-color:var(--gold)}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-success{background:var(--success);color:#fff}
+.btn-wa{background:#25D366;color:#fff}
+.btn-sm{padding:8px 12px;font-size:12px;min-height:36px}
+.btn-xs{padding:5px 10px;font-size:11px;min-height:30px}
+.btn-block{width:100%}
+
+.summary-card{position:sticky;top:88px}
+.row{display:flex;justify-content:space-between;padding:8px 0;font-size:14px;color:var(--muted);gap:10px}
+.row-val{color:var(--text);font-weight:600}
+.row-total{border-top:1px dashed var(--border);margin-top:10px;padding-top:14px;font-weight:700;font-size:18px;color:var(--gold)}
+.mono{font-family:ui-monospace,SFMono-Regular,monospace}
+
+.summary-box{background:var(--bg);padding:16px;border-radius:10px;border:1px solid var(--border);margin-bottom:16px}
+
+.modal{position:fixed;inset:0;background:rgba(28,26,23,0.6);backdrop-filter:blur(3px);z-index:100;display:none;align-items:center;justify-content:center;padding:16px}
+.modal.show{display:flex}
+.modal-box{background:#fff;border-radius:14px;max-width:440px;width:100%;padding:28px;box-shadow:0 20px 40px rgba(0,0,0,0.2)}
+.modal-wide{max-width:960px;padding:0;max-height:95vh;display:flex;flex-direction:column;overflow:hidden}
+
+.pin-dot{font-size:28px;letter-spacing:10px;text-align:center;margin:16px 0;color:var(--gold)}
+.pin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.pin-grid .btn{padding:14px;font-size:18px}
+
+.toast{position:fixed;bottom:20px;left:50%;transform:translate(-50%,100px);background:var(--text);color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;transition:.3s;z-index:1000;box-shadow:0 4px 12px rgba(0,0,0,0.2);max-width:calc(100vw - 32px);text-align:center}
+.toast.show{transform:translate(-50%,0)}
+
+.adm-tabs{display:flex;gap:4px;border-bottom:2px solid var(--border);margin-bottom:20px;overflow-x:auto}
+.adm-tab{padding:10px 16px;background:none;border:none;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:.2s}
+.adm-tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+
+.hist-item{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px;border:1px solid var(--border);border-radius:10px;margin-bottom:10px;background:#fff;flex-wrap:wrap}
+.hist-info{flex:1;min-width:0}
+.hist-title{font-weight:600;font-size:14px;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hist-meta{font-size:11px;color:var(--muted)}
+.hist-total{font-weight:700;color:var(--gold);font-size:14px;font-family:ui-monospace,monospace}
+.hist-actions{display:flex;gap:6px;flex-wrap:wrap}
+
+#doc-preview{background:#fff;padding:32px;font-size:13px;color:var(--text);overflow-y:auto;max-height:calc(95vh - 64px)}
+
+.skeleton{background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:6px;height:16px;margin-bottom:8px}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+.admin-breakdown{margin-top:14px;padding:12px;background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;font-size:11px;line-height:1.5}
+.bd-title{font-weight:800;color:#92400e;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.4px;font-size:10px}
+.bd-row{display:flex;justify-content:space-between;padding:3px 0;gap:8px}
+.bd-row span:first-child{color:#78350f}
+.bd-fee{display:flex;justify-content:space-between;padding:5px 6px;background:#fde68a;margin:4px -6px;border-radius:4px;font-weight:700}
+.bd-hpp{display:flex;justify-content:space-between;padding:6px 0 3px;border-top:1px dashed #d97706;margin-top:4px;font-weight:800;color:#92400e}
+.bd-total{display:flex;justify-content:space-between;padding:6px 0;border-top:1px dashed #d97706;margin-top:4px;font-weight:800;color:#92400e;font-size:13px}
+
+/* FEE TIER TABLE */
+.fee-tier-head{display:grid;grid-template-columns:1fr 1fr 1fr 32px;gap:6px;padding:0 0 6px;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px}
+.fee-tier-row{display:grid;grid-template-columns:1fr 1fr 1fr 32px;gap:6px;margin-bottom:6px;align-items:center}
+.fee-tier-row .inp{min-height:36px;padding:6px 10px}
+
+@media(max-width:1024px){
+  .layout{grid-template-columns:1fr}
+  .summary-card{position:static}
+  .hdr-nav{display:none;position:fixed;top:68px;left:0;right:0;bottom:0;background:#fff;flex-direction:column;align-items:stretch;padding:12px;gap:2px;z-index:42;overflow-y:auto;box-shadow:0 4px 20px rgba(0,0,0,0.1)}
+  .hdr-nav.open{display:flex}
+  .hdr-nav a{padding:14px 16px;font-size:15px;border-radius:8px}
+  .hdr-nav a.hdr-back{margin-left:0;margin-top:8px;text-align:center;padding:14px}
+  .hdr-menu-btn{display:flex}
+}
+@media(max-width:640px){
+  .header-inner{padding:0 14px;height:62px}
+  .hdr-logo{width:38px;height:38px;font-size:16px}
+  .hdr-brand-text span:first-child{font-size:14px}
+  .hdr-brand-text span:last-child{font-size:8px;letter-spacing:0.5px}
+  .hdr-menu-btn{width:38px;height:38px;font-size:18px}
+  .hdr-nav{top:62px}
+  .main{padding:16px 14px 40px}
+  .page-title{font-size:22px}
+  .page-subtitle{font-size:13px;margin-bottom:16px}
+  .card{margin-bottom:12px}
+  .card-header{padding:14px 16px;font-size:13px}
+  .card-body{padding:16px}
+  .grid2{grid-template-columns:1fr;gap:12px}
+  .inp{font-size:16px;padding:12px 14px;min-height:46px}
+  .btn{font-size:14px;padding:12px 16px;min-height:46px}
+  .btn-sm{min-height:40px;padding:10px 14px}
+  .btn-xs{min-height:34px;padding:8px 10px;font-size:11px}
+  .chip{padding:10px 14px;font-size:12px}
+  .modal{padding:0}
+  .modal-box{border-radius:0;padding:20px;max-width:100%;height:100%;overflow-y:auto}
+  .modal-wide{height:100%;max-width:100%;border-radius:0;max-height:100%}
+  #doc-preview{padding:16px;font-size:11px;max-height:calc(100vh - 60px)}
+  #doc-preview table{font-size:10px;display:block;overflow-x:auto;white-space:nowrap}
+  #doc-preview th,#doc-preview td{padding:6px 8px}
+  .toast{left:14px;right:14px;transform:translate(0,100px);max-width:none}
+  .toast.show{transform:translate(0,0)}
+  .hist-item{padding:12px;flex-direction:column;align-items:stretch}
+  .hist-actions{width:100%}
+  .hist-actions .btn{flex:1}
+  .adm-tab{padding:10px 12px;font-size:12px}
+  .fee-tier-head,.fee-tier-row{grid-template-columns:1fr 1fr 1fr 30px;gap:4px}
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a href="https://scentia.id" class="hdr-brand">
+      <div class="hdr-logo">
+        <span id="hdr-logo-placeholder">S</span>
+        <img id="hdr-logo-img" src="" alt="Scentia" style="display:none">
+      </div>
+      <div class="hdr-brand-text">
+        <span>Scentia</span>
+        <span>Beyond Scent, Beyond Limits</span>
+      </div>
+    </a>
+    <nav class="hdr-nav" id="hdr-nav">
+      <a href="https://scentia.id">Beranda</a>
+      <a href="https://scentia.id/#layanan">Layanan</a>
+      <a href="https://scentia.id/#produk">Produk</a>
+      <a href="https://scentia.id/#tentang">Tentang</a>
+      <a href="https://scentia.id/#kontak">Kontak</a>
+      <a href="https://scentia.id" class="hdr-back">← Kembali ke Scentia.id</a>
+    </nav>
+    <button class="hdr-menu-btn" onclick="App.toggleMobileNav()" aria-label="Menu">☰</button>
+  </div>
+</header>
+<div class="hdr-mobile-overlay" id="hdr-mobile-overlay" onclick="App.toggleMobileNav()"></div>
+
+<main class="main">
+
+<section id="page-simulasi">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+    <div>
+      <h1 class="page-title">Simulasi HPP</h1>
+      <p class="page-subtitle">Hitung estimasi biaya produksi parfum Anda</p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button onclick="App.openPin()" class="btn btn-outline btn-sm" id="btn-to-admin-login">🔒 Admin</button>
+      <button onclick="App.showAdminPage()" class="btn btn-outline btn-sm hidden" id="btn-to-admin">⚙️ Admin Panel</button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div>
+      <div class="card">
+        <div class="card-header">👤 Info Klien</div>
+        <div class="card-body grid2">
+          <div><label class="lbl">Nama Klien</label><input id="kl-nama" class="inp" placeholder="PT / Personal"></div>
+          <div><label class="lbl">Brand</label><input id="kl-brand" class="inp" placeholder="Nama brand"></div>
+          <div><label class="lbl">Kontak</label><input id="kl-kontak" class="inp" placeholder="HP / Email"></div>
+          <div><label class="lbl">Alamat</label><input id="kl-alamat" class="inp" placeholder="Kota"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">🛠️ Jasa Maklon</div>
+        <div class="card-body">
+          <label class="lbl">Pilih Paket Jasa Maklon</label>
+          <select id="global-jasa" class="inp" onchange="App.hitungAll()">
+            <option>Memuat...</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span>🌸 Spesifikasi Produk</span>
+          <span id="form-status" style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;background:#fef3c7;color:#92400e">Belum lengkap</span>
+        </div>
+        <div class="card-body"><div id="varian-list"></div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">🏛️ Legalitas (Opsional)</div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:10px">
+          <label style="display:flex;align-items:center;gap:10px;padding:12px;border:1px solid var(--border);border-radius:8px;cursor:pointer;background:var(--bg);flex-wrap:wrap">
+            <input type="checkbox" id="bpom-aktif" style="width:18px;height:18px;accent-color:var(--gold);flex-shrink:0" onchange="App.hitungAll()">
+            <span style="flex:1;min-width:60px;font-size:13px;font-weight:600">BPOM</span>
+            <input type="number" id="bpom-qty" value="1" min="1" style="width:56px;padding:6px;border:1px solid var(--border);border-radius:6px;text-align:center;font-size:13px" onchange="App.hitungAll()">
+            <span style="font-size:11px;color:var(--muted)">varian</span>
+            <span id="bpom-harga-label" style="font-weight:700;color:var(--gold);min-width:80px;text-align:right;font-size:13px">Rp 0</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:10px;padding:12px;border:1px solid var(--border);border-radius:8px;cursor:pointer;background:var(--bg);flex-wrap:wrap">
+            <input type="checkbox" id="hki-aktif" style="width:18px;height:18px;accent-color:var(--gold);flex-shrink:0" onchange="App.hitungAll()">
+            <span style="flex:1;min-width:60px;font-size:13px;font-weight:600">HKI</span>
+            <span id="hki-harga-label" style="font-weight:700;color:var(--gold);min-width:80px;text-align:right;font-size:13px">Rp 0</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">📦 Pajak</div>
+        <div class="card-body">
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+            <input type="checkbox" id="in-ppn" style="width:18px;height:18px;accent-color:var(--gold)" onchange="App.hitungAll()">
+            <span style="font-size:13px;font-weight:500">Kenakan PPN <b id="lbl-ppn-pct">11</b>%</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card summary-card">
+        <div class="card-header">💰 Ringkasan Estimasi</div>
+        <div class="card-body">
+          <div id="summary-varian" style="margin-bottom:16px"></div>
+          <div id="legalitas-summary" class="hidden" style="margin-bottom:16px"></div>
+          <div class="summary-box">
+            <div class="row"><span>Subtotal Produk</span><span class="row-val mono" id="sum-subtotal">Rp 0</span></div>
+            <div class="row"><span>PPN</span><span class="row-val mono" id="sum-ppn">Rp 0</span></div>
+            <div class="row row-total"><span>Total</span><span class="mono" id="sum-total">Rp 0</span></div>
+          </div>
+          <div id="admin-breakdown" class="hidden"></div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
+            <button onclick="App.previewPDF()" class="btn btn-primary">📄 Preview PDF</button>
+            <button onclick="App.saveQuotation()" class="btn btn-success" id="btn-save">💾 Simpan Penawaran</button>
+            <button onclick="App.chatWA()" class="btn btn-wa">💬 WhatsApp</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="page-admin" class="hidden">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+    <div>
+      <h1 class="page-title">Admin Panel</h1>
+      <p class="page-subtitle">Kelola pengaturan & riwayat penawaran</p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button onclick="App.showSimulasiPage()" class="btn btn-outline btn-sm">← Simulasi</button>
+      <button onclick="App.logoutAdmin()" class="btn btn-outline btn-sm">Logout</button>
+    </div>
+  </div>
+
+  <div class="adm-tabs">
+    <button class="adm-tab active" data-adm-tab="pengaturan" onclick="App.admTab('pengaturan')">⚙️ Pengaturan</button>
+    <button class="adm-tab" data-adm-tab="riwayat" onclick="App.admTab('riwayat')">📋 Riwayat Penawaran</button>
+    <button class="adm-tab" data-adm-tab="logo" onclick="App.admTab('logo')">🖼️ Logo & Kop</button>
+  </div>
+
+  <div id="adm-page-pengaturan">
+    <div class="grid2" style="gap:16px">
+      <div class="card">
+        <div class="card-header">🛠️ Jasa Maklon</div>
+        <div class="card-body">
+          <div id="adm-jasa-list"></div>
+          <button onclick="App.addJasa()" class="btn btn-outline btn-sm btn-block" style="margin-top:10px">+ Tambah Jasa</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">💵 Fee Berdasarkan Qty</div>
+        <div class="card-body">
+          <div class="fee-tier-head">
+            <span>Min Qty</span><span>Max Qty</span><span>Fee/pcs</span><span></span>
+          </div>
+          <div id="adm-fee-tiers"></div>
+          <button onclick="App.addFeeTier()" class="btn btn-outline btn-sm btn-block" style="margin-top:8px">+ Tambah Tier</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">🏛️ Legalitas & PPN</div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:14px">
+          <div><label class="lbl">BPOM (Rp)</label><input id="adm-bpom" type="number" class="inp mono" placeholder="0"></div>
+          <div><label class="lbl">HKI (Rp)</label><input id="adm-hki" type="number" class="inp mono" placeholder="0"></div>
+          <div><label class="lbl">PPN (%)</label><input id="adm-ppn" type="number" class="inp mono" placeholder="11"></div>
+        </div>
+      </div>
+      <div class="card" style="display:flex;align-items:flex-end">
+        <div class="card-body" style="width:100%">
+          <button onclick="App.savePengaturan()" class="btn btn-primary btn-block">💾 Simpan Semua Pengaturan</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="adm-page-riwayat" class="hidden">
+    <div class="card">
+      <div class="card-header">
+        <span>📋 Riwayat Penawaran</span>
+        <button onclick="App.loadRiwayat()" class="btn btn-outline btn-xs">🔄 Refresh</button>
+      </div>
+      <div class="card-body">
+        <div id="adm-riwayat-list"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="adm-page-logo" class="hidden">
+    <div class="card">
+      <div class="card-header">🖼️ Upload Logo</div>
+      <div class="card-body">
+        <div style="text-align:center;padding:20px;margin-bottom:16px">
+          <div id="logo-preview" style="width:120px;height:120px;border:2px dashed var(--border);border-radius:12px;margin:0 auto;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;overflow:hidden;background:var(--bg)">
+            <span>Belum ada logo</span>
+          </div>
+        </div>
+        <label class="btn btn-primary btn-block" style="cursor:pointer">
+          📤 Pilih File Logo (PNG/JPG)
+          <input type="file" id="logo-input" accept="image/png,image/jpeg,image/webp" class="hidden" onchange="App.uploadLogo(event)">
+        </label>
+        <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:10px">Logo akan tampil di header & PDF penawaran</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">🏢 Kop Surat</div>
+      <div class="card-body">
+        <div style="padding:16px;background:var(--bg);border-radius:8px;font-size:12px;line-height:1.6;text-align:center">
+          <div style="font-family:'Playfair Display',serif;font-weight:700;font-size:16px;color:var(--gold)">CV Scentia Ultimacos</div>
+          <div style="font-style:italic;color:var(--muted);margin:2px 0">Beyond Scent, Beyond Limits</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:6px">Grand Harvest, Soho HO No.23, Kebraon, Karangpilang, Surabaya, East Java</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">Telp. 085743243378 / 08139231068 • info.scentia@gmail.com • www.scentia.id</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<div id="modal-pin" class="modal">
+  <div class="modal-box">
+    <div style="text-align:center;margin-bottom:16px">
+      <div style="width:56px;height:56px;background:var(--bg);color:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:24px;border:1px solid var(--border)">🔒</div>
+      <div class="font-serif" style="font-weight:700;font-size:18px">Admin Login</div>
+    </div>
+    <div id="pin-display" class="pin-dot">····</div>
+    <div class="pin-grid">
+      <button onclick="App.pinPress('1')" class="btn btn-outline">1</button>
+      <button onclick="App.pinPress('2')" class="btn btn-outline">2</button>
+      <button onclick="App.pinPress('3')" class="btn btn-outline">3</button>
+      <button onclick="App.pinPress('4')" class="btn btn-outline">4</button>
+      <button onclick="App.pinPress('5')" class="btn btn-outline">5</button>
+      <button onclick="App.pinPress('6')" class="btn btn-outline">6</button>
+      <button onclick="App.pinPress('7')" class="btn btn-outline">7</button>
+      <button onclick="App.pinPress('8')" class="btn btn-outline">8</button>
+      <button onclick="App.pinPress('9')" class="btn btn-outline">9</button>
+      <button onclick="App.pinClear()" class="btn btn-outline">C</button>
+      <button onclick="App.pinPress('0')" class="btn btn-outline">0</button>
+      <button onclick="App.pinSubmit()" class="btn btn-primary">✓</button>
+    </div>
+    <div id="pin-status" style="text-align:center;font-size:12px;color:var(--muted);margin:14px 0;min-height:18px">&nbsp;</div>
+    <button onclick="App.closePin()" class="btn btn-outline btn-block">Batal</button>
+  </div>
+</div>
+
+<div id="modal-pdf" class="modal">
+  <div class="modal-box modal-wide">
+    <div style="display:flex;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border);background:#fff;gap:8px;flex-wrap:wrap;align-items:center">
+      <div class="font-serif" style="font-weight:700;font-size:16px">Preview Penawaran</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button onclick="App.downloadPDF()" class="btn btn-primary btn-sm">📥 PDF</button>
+        <button onclick="App.closePDF()" class="btn btn-outline btn-sm">Tutup</button>
+      </div>
+    </div>
+    <div id="doc-preview"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const SUPABASE_URL = 'https://tjoyzlgdkhkhiggmealh.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqb3l6bGdka2hraGlnZ21lYWxoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEyOTA2MTMsImV4cCI6MjEwNjg2NjYxM30.72127lDKmBDDB0vE-zgB2BLllCRZns1kb8x4zMkzMi0';
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const PIN_HASH = "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4"; // 1234
+
+const HARDCODED = {
+  konsentrasi: [
+    { id:"edc", nama:"EDC", pct:4 },
+    { id:"edt", nama:"EDT", pct:10 },
+    { id:"edp", nama:"EDP", pct:15 },
+    { id:"extrait", nama:"Extrait", pct:40 },
+    { id:"custom", nama:"Custom", pct:0 },
+  ],
+  bases: [
+    { id:"base_parfum", nama:"Base Parfum", hargaPerML:50 },
+    { id:"base_non_alk", nama:"Base Non Alkohol", hargaPerML:80 },
+    { id:"base_bodymist", nama:"Base Body Mist", hargaPerML:30 }
+  ],
+  rekomendasiBibit: [
+    { id:"eko", nama:"Ekonomis", harga:650 },
+    { id:"std", nama:"Standart", harga:850 },
+    { id:"prem", nama:"Premium", harga:1200 },
+  ],
+  botol: [
+    { id:"bt_std", nama:"Botol Kaca Standart", harga:3500 },
+    { id:"bt_semi", nama:"Botol Kaca Semi Premium", harga:5000 },
+    { id:"bt_prem", nama:"Botol Kaca Premium", harga:10000 },
+    { id:"bt_eks", nama:"Botol Kaca Eksklusif", harga:15000 },
+    { id:"bt_cust", nama:"Dari Customer", harga:0 },
+  ],
+  kemasan: [
+    { id:"km_none", nama:"Tanpa Kemasan", harga:0 },
+    { id:"km_std", nama:"Standart", harga:800 },
+    { id:"km_iv_sk", nama:"Soft Box Ivory Skat Kertas", harga:2000 },
+    { id:"km_ef_sk", nama:"Soft Box Eflod Skat Kertas", harga:2500 },
+    { id:"km_ef_sb", nama:"Soft Box Eflod Skat Busa", harga:3000 },
+    { id:"km_iv_sb", nama:"Soft Box Ivory Skat Busa", harga:4000 },
+    { id:"km_hb", nama:"Hard Box", harga:7000 },
+    { id:"km_hb_sb_std", nama:"Hard Box Busa Standart", harga:8000 },
+    { id:"km_hb_sb_prem", nama:"Hard Box Busa Premium", harga:9000 },
+    { id:"km_hb_super", nama:"Hard Super Premium", harga:11000 },
+    { id:"km_cust", nama:"Dari Customer", harga:0 },
+  ],
+  stiker: [
+    { id:"st_gloss", nama:"Vinyl Susu Laminasi Gloss", harga:200 },
+    { id:"st_doff", nama:"Vinyl Susu Laminasi Doff", harga:200 },
+    { id:"st_trans", nama:"Vinyl Susu Transparan", harga:200 },
+    { id:"st_metalic", nama:"Vinyl Metalic", harga:400 },
+  ],
+  defaultFeeTiers: [
+    { min:100, max:249, fee:5000 },
+    { min:250, max:499, fee:4000 },
+    { min:500, max:749, fee:3000 },
+    { min:750, max:999, fee:1500 },
+    { min:1000, max:999999, fee:1000 }
+  ],
+  kop: {
+    company: "CV Scentia Ultimacos",
+    tagline: "Beyond Scent, Beyond Limits",
+    address: "Grand Harvest, Soho HO No.23, Kebraon, Karangpilang, Surabaya, East Java",
+    phone: "Telp. 085743243378 / 08139231068",
+    email: "info.scentia@gmail.com",
+    website: "www.scentia.id",
+  }
+};
+
+const STATE = {
+  settings: null,
+  varian: null,
+  isAdmin: false,
+  pinBuffer: "", pinAttempts: 0, pinLockUntil: 0,
+  editingQuotationId: null,
+  riwayat: [],
+  _calc: null,
+  _currentPDF: null,
+};
+
+const U = {
+  rp: n => 'Rp ' + Math.round(n||0).toLocaleString('id-ID'),
+  num: n => Math.round(n||0).toLocaleString('id-ID'),
+  esc: s => String(s??'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),
+  date: d => new Date(d).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}),
+};
+
+async function sha256(str){
+  const buf = new TextEncoder().encode(str);
+  const h = await crypto.subtle.digest("SHA-256", buf);
+  return Array.from(new Uint8Array(h)).map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+
+function toast(msg, duration=2200){
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(el._t);
+  el._t = setTimeout(()=>el.classList.remove("show"), duration);
+}
+
+function uid(){ return "v_"+Date.now()+"_"+Math.random().toString(36).slice(2,6); }
+
+// Cari fee tier untuk qty tertentu
+function getFeeForQty(qty, tiers){
+  if(!Array.isArray(tiers) || !tiers.length) return 0;
+  const sorted = [...tiers].sort((a,b) => a.min - b.min);
+  const found = sorted.find(t => qty >= t.min && qty <= t.max);
+  if(found) return found.fee;
+  // Jika qty di bawah tier terendah → pakai tier terendah
+  // Jika qty di atas tier tertinggi → pakai tier tertinggi
+  if(qty < sorted[0].min) return sorted[0].fee;
+  return sorted[sorted.length-1].fee;
+}
+
+function getTierForQty(qty, tiers){
+  if(!Array.isArray(tiers) || !tiers.length) return null;
+  const sorted = [...tiers].sort((a,b) => a.min - b.min);
+  const found = sorted.find(t => qty >= t.min && qty <= t.max);
+  if(found) return found;
+  if(qty < sorted[0].min) return sorted[0];
+  return sorted[sorted.length-1];
+}
+
+const App = {
+  async init(){
+    await this.loadSettings();
+    STATE.varian = this.newVarian();
+    this.renderJasaDropdown();
+    this.renderVarian();
+    this.hitungAll();
+    this.renderLogoHeader();
+    this.updateAdminUI();
+    console.log("%c🔒 Scentia — PIN default: 1234", "color:#B08D4F;font-weight:bold");
+  },
+
+  async loadSettings(){
+    try {
+      const { data, error } = await db.from('scentia_settings').select('*').eq('id', 1).single();
+      if(error) throw error;
+      STATE.settings = data;
+      if(!Array.isArray(STATE.settings.fee_tiers) || !STATE.settings.fee_tiers.length){
+        STATE.settings.fee_tiers = JSON.parse(JSON.stringify(HARDCODED.defaultFeeTiers));
+      }
+      document.getElementById("lbl-ppn-pct").textContent = data.ppn || 11;
+    } catch(err){
+      console.error("Supabase error:", err);
+      STATE.settings = {
+        id: 1, logo_url: null,
+        jasa_maklon: [
+          {id:"j1",nama:"Non Box",harga:250},
+          {id:"j2",nama:"Non Box + Shrink",harga:700},
+          {id:"j3",nama:"Box Standart + Shrink",harga:1250},
+          {id:"j4",nama:"Middle + Shrink",harga:1800},
+          {id:"j6",nama:"Hard Box Shrink",harga:2800}
+        ],
+        fee_tiers: JSON.parse(JSON.stringify(HARDCODED.defaultFeeTiers)),
+        bpom_price: 1500000, hki_price: 3800000, ppn: 11
+      };
+      toast("⚠️ Gagal load settings, pakai default");
+    }
+  },
+
+  toggleMobileNav(){
+    document.getElementById("hdr-nav").classList.toggle("open");
+    document.getElementById("hdr-mobile-overlay").classList.toggle("show");
+  },
+
+  renderLogoHeader(){
+    const url = STATE.settings?.logo_url;
+    const img = document.getElementById("hdr-logo-img");
+    const ph = document.getElementById("hdr-logo-placeholder");
+    const preview = document.getElementById("logo-preview");
+    if(url){
+      img.src = url; img.style.display = "block"; ph.style.display = "none";
+      if(preview) preview.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover">`;
+    } else {
+      img.style.display = "none"; ph.style.display = "block";
+      if(preview) preview.innerHTML = `<span>Belum ada logo</span>`;
+    }
+  },
+
+  async uploadLogo(ev){
+    const file = ev.target.files[0];
+    if(!file) return;
+    if(file.size > 2*1024*1024){ toast("Maks 2 MB"); return; }
+    toast("⏳ Uploading...");
+    try {
+      const ext = file.name.split('.').pop().toLowerCase();
+      const filename = `logo-${Date.now()}.${ext}`;
+      const { data, error } = await db.storage.from('logos').upload(filename, file, { upsert: true });
+      if(error) throw error;
+      const { data: urlData } = db.storage.from('logos').getPublicUrl(filename);
+      const publicUrl = urlData.publicUrl;
+      const { error: updErr } = await db.from('scentia_settings').update({ logo_url: publicUrl, updated_at: new Date().toISOString() }).eq('id', 1);
+      if(updErr) throw updErr;
+      STATE.settings.logo_url = publicUrl;
+      this.renderLogoHeader();
+      toast("✅ Logo berhasil diupload");
+    } catch(err){
+      console.error(err);
+      toast("❌ Gagal upload: " + err.message);
+    }
+    ev.target.value = "";
+  },
+
+  newVarian(){
+    const defaultBase = HARDCODED.bases[0];
+    return {
+      id: uid(),
+      nama: "",
+      volume: 32, konsId: "edp", customPct: null,
+      baseId: defaultBase.id, hargaBibit: 850, hargaBase: defaultBase.hargaPerML,
+      botolNama: "", botolHarga: null,
+      kemasanNama: "", kemasanHarga: null,
+      stikerNama: "", stikerHarga: null,
+      qty: 1000,
+    };
+  },
+
+  updateVarian(key, val){
+    const v = STATE.varian;
+    const numKeys = ["volume","hargaBibit","hargaBase","botolHarga","kemasanHarga","stikerHarga","qty","customPct"];
+    if(numKeys.includes(key)) v[key] = val === "" ? null : (parseFloat(val) || 0);
+    else v[key] = val;
+    if(key === "baseId"){
+      const b = HARDCODED.bases.find(x => x.id === val);
+      if(b) v.hargaBase = b.hargaPerML;
+      this.renderVarian(); this.hitungAll(); return;
+    }
+    if(key === "nama"){
+      const hdr = document.querySelector(".varian-title");
+      if(hdr) hdr.textContent = v.nama || "Detail Produk";
+    }
+    this.updateCalcInfo();
+    this.updateRequiredUI();
+    this.hitungAll();
+  },
+
+  updateCalcInfo(){
+    const v = STATE.varian;
+    const el = document.querySelector('[data-calc-info]');
+    if(!el) return;
+    const kons = HARDCODED.konsentrasi.find(k => k.id === v.konsId);
+    let pctBibit = kons.pct;
+    if(kons.id === "custom") pctBibit = v.customPct ?? 0;
+    const pctBase = 100 - pctBibit;
+    const vol = v.volume ?? 0;
+    const mLBibit = vol * pctBibit / 100, mLBase = vol * pctBase / 100;
+    const warn = (kons.id === "custom" && (v.customPct === null || v.customPct === undefined))
+      ? `<div style="color:#b45309;font-size:11px;font-weight:700;margin-bottom:4px">⚠️ Isi konsentrasi custom dulu</div>` : "";
+    el.innerHTML = warn + `
+      Bibit <b style="color:var(--text)">${pctBibit}%</b> = ${mLBibit.toFixed(2)} mL × ${U.rp(v.hargaBibit)}/mL = <b style="color:var(--gold)">${U.rp(mLBibit * (v.hargaBibit||0))}</b><br>
+      Base <b style="color:var(--text)">${pctBase}%</b> = ${mLBase.toFixed(2)} mL × ${U.rp(v.hargaBase)}/mL = <b style="color:var(--gold)">${U.rp(mLBase * (v.hargaBase||0))}</b>
+    `;
+  },
+
+  updateRequiredUI(){
+    const v = STATE.varian;
+    const req = {
+      nama: !v.nama?.trim(),
+      volume: v.volume === null || v.volume === undefined,
+      customPct: v.konsId === "custom" && (v.customPct === null || v.customPct === undefined),
+      hargaBibit: v.hargaBibit === null || v.hargaBibit === undefined,
+      hargaBase: v.hargaBase === null || v.hargaBase === undefined,
+      botolNama: !v.botolNama?.trim(),
+      botolHarga: v.botolHarga === null || v.botolHarga === undefined,
+      kemasanNama: !v.kemasanNama?.trim(),
+      kemasanHarga: v.kemasanHarga === null || v.kemasanHarga === undefined,
+      stikerNama: !v.stikerNama?.trim(),
+      stikerHarga: v.stikerHarga === null || v.stikerHarga === undefined,
+      qty: v.qty === null || v.qty === undefined,
+    };
+    Object.entries(req).forEach(([k, isReq]) => {
+      const inp = document.querySelector(`[data-key="${k}"]`);
+      if(inp) inp.classList.toggle("inp-required", isReq);
+      document.querySelectorAll(`[data-req-badge="${k}"]`).forEach(b => b.classList.toggle("hidden", !isReq));
+    });
+    const anyReq = Object.values(req).some(Boolean);
+    const badge = document.getElementById("form-status");
+    badge.textContent = anyReq ? "Belum lengkap" : "✓ Lengkap";
+    badge.style.background = anyReq ? "#fef3c7" : "#d1fae5";
+    badge.style.color = anyReq ? "#92400e" : "#065f46";
+  },
+
+  pilihKonsentrasi(konsId){ STATE.varian.konsId = konsId; this.renderVarian(); this.hitungAll(); },
+  pilihBibit(harga){ STATE.varian.hargaBibit = harga; this.renderVarian(); this.hitungAll(); },
+
+  // Dropdown handlers
+  setBotol(idBotol){
+    const v = STATE.varian;
+    if(idBotol === "__custom__"){
+      v.botolNama = ""; v.botolHarga = null;
+    } else {
+      const b = HARDCODED.botol.find(x => x.id === idBotol);
+      if(b){ v.botolNama = b.nama; v.botolHarga = b.harga; }
+    }
+    this.renderVarian(); this.hitungAll();
+  },
+  setKemasan(idKemasan){
+    const v = STATE.varian;
+    if(idKemasan === "__custom__"){
+      v.kemasanNama = ""; v.kemasanHarga = null;
+    } else {
+      const k = HARDCODED.kemasan.find(x => x.id === idKemasan);
+      if(k){ v.kemasanNama = k.nama; v.kemasanHarga = k.harga; }
+    }
+    this.renderVarian(); this.hitungAll();
+  },
+  setStiker(idStiker){
+    const v = STATE.varian;
+    if(idStiker === "__custom__"){
+      v.stikerNama = ""; v.stikerHarga = null;
+    } else {
+      const s = HARDCODED.stiker.find(x => x.id === idStiker);
+      if(s){ v.stikerNama = s.nama; v.stikerHarga = s.harga; }
+    }
+    this.renderVarian(); this.hitungAll();
+  },
+
+  renderVarian(){
+    const v = STATE.varian;
+    const kons = HARDCODED.konsentrasi.find(k => k.id === v.konsId);
+    let pctBibit = kons.pct;
+    if(kons.id === "custom") pctBibit = v.customPct ?? 0;
+    const pctBase = 100 - pctBibit;
+    const vol = v.volume ?? 0;
+    const mLBibit = vol * pctBibit / 100, mLBase = vol * pctBase / 100;
+
+    const konsChips = HARDCODED.konsentrasi.map(k => `
+      <button type="button" class="chip ${k.id === v.konsId ? 'active' : ''}" onclick="App.pilihKonsentrasi('${k.id}')">
+        ${U.esc(k.nama)} ${k.id === 'custom' ? '<b>%</b>' : `<b>${k.pct}%</b>`}
+      </button>`).join("");
+
+    const bibitChips = HARDCODED.rekomendasiBibit.map(r => `
+      <button type="button" class="chip ${r.harga === v.hargaBibit ? 'active' : ''}" onclick="App.pilihBibit(${r.harga})">
+        ${U.esc(r.nama)} <b>${U.rp(r.harga)}</b>
+      </button>`).join("");
+
+    // Deteksi pilihan saat ini
+    const botolSelId = HARDCODED.botol.find(b => b.nama === v.botolNama)?.id || (v.botolNama ? "__custom__" : "");
+    const kemasanSelId = HARDCODED.kemasan.find(k => k.nama === v.kemasanNama)?.id || (v.kemasanNama ? "__custom__" : "");
+    const stikerSelId = HARDCODED.stiker.find(s => s.nama === v.stikerNama)?.id || (v.stikerNama ? "__custom__" : "");
+
+    const reqNama = !v.nama?.trim();
+    const reqVolume = v.volume === null || v.volume === undefined;
+    const reqCustom = v.konsId === "custom" && (v.customPct === null || v.customPct === undefined);
+    const reqHB = v.hargaBibit === null || v.hargaBibit === undefined;
+    const reqHBase = v.hargaBase === null || v.hargaBase === undefined;
+    const reqBotol = !v.botolNama?.trim();
+    const reqBotolH = v.botolHarga === null || v.botolHarga === undefined;
+    const reqKemasan = !v.kemasanNama?.trim();
+    const reqKemasanH = v.kemasanHarga === null || v.kemasanHarga === undefined;
+    const reqStiker = !v.stikerNama?.trim();
+    const reqStikerH = v.stikerHarga === null || v.stikerHarga === undefined;
+    const reqQty = v.qty === null || v.qty === undefined;
+
+    const customWarn = (kons.id === "custom" && (v.customPct === null || v.customPct === undefined))
+      ? `<div style="color:#b45309;font-size:11px;font-weight:700;margin-bottom:4px">⚠️ Isi konsentrasi custom dulu</div>` : "";
+
+    document.getElementById("varian-list").innerHTML = `
+      <div class="varian-card">
+        <div class="varian-header" style="padding:14px 16px;background:linear-gradient(135deg,#fff,var(--bg));border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:8px;min-width:0">
+            <span style="font-size:18px">🌸</span>
+            <span class="varian-title" style="font-weight:700;font-size:15px">${U.esc(v.nama || "Detail Produk")}</span>
+          </div>
+          <div style="font-size:12px;color:var(--muted)">Subtotal: <b id="var-sub" class="mono" style="color:var(--gold)">Rp 0</b></div>
+        </div>
+        <div class="varian-body" style="padding:16px">
+          <div class="grid2">
+            <div>
+              <label class="lbl">Nama Aroma ${reqNama ? '<span class="req-badge" data-req-badge="nama">Wajib</span>' : '<span class="req-badge hidden" data-req-badge="nama">Wajib</span>'}</label>
+              <input class="inp ${reqNama?'inp-required':''}" data-key="nama" value="${U.esc(v.nama)}" placeholder="Melati / Oud" oninput="App.updateVarian('nama',this.value)">
+            </div>
+            <div>
+              <label class="lbl">Volume (mL) ${reqVolume ? '<span class="req-badge" data-req-badge="volume">Wajib</span>' : '<span class="req-badge hidden" data-req-badge="volume">Wajib</span>'}</label>
+              <input type="number" class="inp mono ${reqVolume?'inp-required':''}" data-key="volume" value="${v.volume ?? ''}" min="1" placeholder="32" oninput="App.updateVarian('volume',this.value)">
+            </div>
+          </div>
+
+          <div style="margin-top:14px">
+            <label class="lbl">Konsentrasi</label>
+            <div class="chips">${konsChips}</div>
+            ${v.konsId === "custom" ? `
+              <div style="margin-top:12px">
+                <label class="lbl">Konsentrasi Custom (%) ${reqCustom ? '<span class="req-badge" data-req-badge="customPct">Wajib</span>' : '<span class="req-badge hidden" data-req-badge="customPct">Wajib</span>'}</label>
+                <input type="number" min="0" max="100" step="0.1" class="inp mono ${reqCustom?'inp-required':''}" data-key="customPct" value="${v.customPct ?? ''}" placeholder="Contoh: 25" oninput="App.updateVarian('customPct',this.value)">
+              </div>
+            ` : ""}
+          </div>
+
+          <div style="margin-top:14px">
+            <label class="lbl">Base Cair</label>
+            <select class="inp" onchange="App.updateVarian('baseId',this.value)">
+              ${HARDCODED.bases.map(b => `<option value="${b.id}" ${b.id===v.baseId?'selected':''}>${U.esc(b.nama)} — ${U.rp(b.hargaPerML)}/mL</option>`).join("")}
+            </select>
+          </div>
+
+          <div data-calc-info style="margin-top:14px;font-size:12px;background:var(--bg);padding:12px;border-radius:8px;border:1px solid var(--border);color:var(--muted);line-height:1.7">
+            ${customWarn}Bibit <b style="color:var(--text)">${pctBibit}%</b> = ${mLBibit.toFixed(2)} mL × ${U.rp(v.hargaBibit)}/mL = <b style="color:var(--gold)">${U.rp(mLBibit * (v.hargaBibit||0))}</b><br>
+            Base <b style="color:var(--text)">${pctBase}%</b> = ${mLBase.toFixed(2)} mL × ${U.rp(v.hargaBase)}/mL = <b style="color:var(--gold)">${U.rp(mLBase * (v.hargaBase||0))}</b>
+          </div>
+
+          <div style="margin-top:16px">
+            <label class="lbl">Rekomendasi Harga Bibit</label>
+            <div class="chips">${bibitChips}</div>
+            <div class="grid2" style="margin-top:10px">
+              <div>
+                <label class="lbl">Harga Bibit / mL ${reqHB ? '<span class="req-badge" data-req-badge="hargaBibit">Wajib</span>' : '<span class="req-badge hidden" data-req-badge="hargaBibit">Wajib</span>'}</label>
+                <input type="number" class="inp mono ${reqHB?'inp-required':''}" data-key="hargaBibit" value="${v.hargaBibit ?? ''}" placeholder="Rp 0" oninput="App.updateVarian('hargaBibit',this.value)">
+              </div>
+              <div>
+                <label class="lbl">Harga Base / mL ${reqHBase ? '<span class="req-badge" data-req-badge="hargaBase">Wajib</span>' : '<span class="req-badge hidden" data-req-badge="hargaBase">Wajib</span>'}</label>
+                <input type="number" class="inp mono ${reqHBase?'inp-required':''}" data-key="hargaBase" value="${v.hargaBase ?? ''}" placeholder="Rp 0" oninput="App.updateVarian('hargaBase',this.value)">
+              </div>
+            </div>
+          </div>
+
+          <hr style="border:none;border-top:1px dashed var(--border);margin:16px 0">
+
+          <div>
+            <label class="lbl">Botol ${reqBotol ? '<span class="req-badge" data-req-badge="botolNama">Wajib</span>' : '<span class="req-badge hidden" data-req-badge="botolNama">Wajib</span>'}</label>
+            <select class="inp ${reqBotol?'inp-required':''}" data-key="botolSel" onchange="App.setBotol(this.value)">
+              <option value="" ${!botolSelId?'selected':''}>— Pilih Botol —</option>
+              ${HARDCODED.botol.map(b => `<option value="${b.id}" ${b.id===botolSelId?'selected':''}>${U.esc(b.nama)} — ${U.rp(b.harga)}</option>`).join("")}
+              <option value="__custom__" ${botolSelId==='__custom__'?'selected':''}>— Custom (isi manual) —</option>
+            </select>
+            <div class="grid2" style="margin-top:10px">
+              <div>
+                <label class="lbl">Nama Botol</label>
+                <input class="inp" data-key="botolNama" value="${U.esc(v.botolNama)}" placeholder="Nama botol / custom" oninput="App.updateVarian('botolNama',this.value)">
+              </div>
+              <div>
+                <label class="lbl">Harga Botol ${reqBotolH ? '<span class="req-badge" data-req-badge="botolHarga">Wajib</span>' : '<span class="req-badge hidden" data-req-badge="botolHarga">Wajib</span>'}</label>
+                <input type="number" class="inp mono ${reqBotolH?'inp-required':''}" data-key="botolHarga" value="${v.botolHarga ?? ''}" placeholder="Rp 0" oninput="App.updateVarian('botolHarga',this.value)">
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top:16px">
+            <label class="lbl">Kemasan ${reqKemasan ? '<span class="req-badge" data-req-badge="kemasanNama">Wajib</span>' : '<span class="req-badge hidden" data-req-badge="kemasanNama">Wajib</span>'}</label>
+            <select class="inp ${reqKemasan?'inp-required':''}" data-key="kemasanSel" onchange="App.setKemasan(this.value)">
+              <option value="" ${!kemasanSelId?'selected':''}>— Pilih Kemasan —</option>
+              ${HARDCODED.kemasan.map(k => `<option value="${k.id}" ${k.id===kemasanSelId?'selected':''}>${U.esc(k.nama)} — ${U.rp(k.harga)}</option>`).join("")}
+              <option value="__custom__" ${kemasanSelId==='__custom__'?'selected':''}>— Custom (isi manual) —</option>
+            </select>
+            <div class="grid2" style="margin-top:10px">
+              <div>
+                <label class="lbl">Nama Kemasan</label>
+                <input class="inp" data-key="kemasanNama" value="${U.esc(v.kemasanNama)}" placeholder="Nama kemasan / custom" oninput="App.updateVarian('kemasanNama',this.value)">
+              </div>
+              <div>
+                <label class="lbl">Harga Kemasan ${reqKemasanH ? '<span class="req-badge" data-req-badge="kemasanHarga">Wajib</span>' : '<span class="req-badge hidden" data-req-badge="kemasanHarga">Wajib</span>'}</label>
+                <input type="number" class="inp mono ${reqKemasanH?'inp-required':''}" data-key="kemasanHarga" value="${v.kemasanHarga ?? ''}" placeholder="Rp 0" oninput="App.updateVarian('kemasanHarga',this.value)">
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top:16px">
+            <label class="lbl">Stiker ${reqStiker ? '<span class="req-badge" data-req-badge="stikerNama">Wajib</span>' : '<span class="req-badge hidden" data-req-badge="stikerNama">Wajib</span>'}</label>
+            <select class="inp ${reqStiker?'inp-required':''}" data-key="stikerSel" onchange="App.setStiker(this.value)">
+              <option value="" ${!stikerSelId?'selected':''}>— Pilih Stiker —</option>
+              ${HARDCODED.stiker.map(s => `<option value="${s.id}" ${s.id===stikerSelId?'selected':''}>${U.esc(s.nama)} — ${U.rp(s.harga)}</option>`).join("")}
+              <option value="__custom__" ${stikerSelId==='__custom__'?'selected':''}>— Custom (isi manual) —</option>
+            </select>
+            <div class="grid2" style="margin-top:10px">
+              <div>
+                <label class="lbl">Nama Stiker</label>
+                <input class="inp" data-key="stikerNama" value="${U.esc(v.stikerNama)}" placeholder="Nama stiker / custom" oninput="App.updateVarian('stikerNama',this.value)">
+              </div>
+              <div>
+                <label class="lbl">Harga Stiker ${reqStikerH ? '<span class="req-badge" data-req-badge="stikerHarga">Wajib</span>' : '<span class="req-badge hidden" data-req-badge="stikerHarga">Wajib</span>'}</label>
+                <input type="number" class="inp mono ${reqStikerH?'inp-required':''}" data-key="stikerHarga" value="${v.stikerHarga ?? ''}" placeholder="Rp 0" oninput="App.updateVarian('stikerHarga',this.value)">
+              </div>
+            </div>
+          </div>
+
+          <div class="grid2" style="margin-top:16px">
+            <div>
+              <label class="lbl">Qty (pcs) ${reqQty ? '<span class="req-badge" data-req-badge="qty">Wajib</span>' : '<span class="req-badge hidden" data-req-badge="qty">Wajib</span>'}</label>
+              <input type="number" class="inp mono ${reqQty?'inp-required':''}" data-key="qty" value="${v.qty ?? ''}" min="0" placeholder="1000" oninput="App.updateVarian('qty',this.value)">
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    this.updateRequiredUI();
+  },
+
+  renderJasaDropdown(){
+    const sel = document.getElementById("global-jasa");
+    const jasa = STATE.settings.jasa_maklon || [];
+    sel.innerHTML = jasa.map(j => `<option value="${j.id}">${U.esc(j.nama)}</option>`).join("");
+  },
+
+  hitungAll(){
+    const v = STATE.varian;
+    if(!v) return;
+    const jasaId = document.getElementById("global-jasa").value;
+    const jasa = STATE.settings.jasa_maklon.find(j => j.id === jasaId) || {nama:"-", harga:0};
+
+    // FEE dari tier berdasarkan qty
+    const qty = v.qty || 0;
+    const tiers = STATE.settings.fee_tiers || [];
+    const fee = getFeeForQty(qty, tiers);
+    const activeTier = getTierForQty(qty, tiers);
+
+    const kons = HARDCODED.konsentrasi.find(k => k.id === v.konsId);
+    let pctBibit = kons.pct;
+    if(kons.id === "custom") pctBibit = v.customPct ?? 0;
+    const pctBase = 100 - pctBibit;
+    const vol = v.volume ?? 0;
+    const mLBibit = vol * pctBibit / 100, mLBase = vol * pctBase / 100;
+    const rpBibit = mLBibit * (v.hargaBibit || 0);
+    const rpBase = mLBase * (v.hargaBase || 0);
+    const rpBotol = v.botolHarga || 0, rpKemasan = v.kemasanHarga || 0, rpStiker = v.stikerHarga || 0;
+    const hppUnit = rpBibit + rpBase + rpBotol + rpKemasan + rpStiker + jasa.harga + fee;
+    const subtotal = hppUnit * qty;
+
+    const bpomAktif = document.getElementById("bpom-aktif").checked;
+    const bpomQty = parseInt(document.getElementById("bpom-qty").value) || 1;
+    const hkiAktif = document.getElementById("hki-aktif").checked;
+    const bpomTotal = bpomAktif ? (STATE.settings.bpom_price || 0) * bpomQty : 0;
+    const hkiTotal = hkiAktif ? (STATE.settings.hki_price || 0) : 0;
+    const legalitasTotal = bpomTotal + hkiTotal;
+    document.getElementById("bpom-harga-label").textContent = U.rp(bpomTotal);
+    document.getElementById("hki-harga-label").textContent = U.rp(hkiTotal);
+
+    const ppnOn = document.getElementById("in-ppn").checked;
+    const ppnPct = ppnOn ? (STATE.settings.ppn || 11) : 0;
+    const ppnNominal = subtotal * ppnPct / 100;
+    const total = subtotal + ppnNominal + legalitasTotal;
+
+    document.getElementById("sum-subtotal").textContent = U.rp(subtotal);
+    document.getElementById("sum-ppn").textContent = U.rp(ppnNominal);
+    document.getElementById("sum-total").textContent = U.rp(total);
+    const varSub = document.getElementById("var-sub");
+    if(varSub) varSub.textContent = U.rp(subtotal);
+
+    document.getElementById("summary-varian").innerHTML = `
+      <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px dashed var(--border);gap:10px">
+        <div style="min-width:0">
+          <div style="font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${U.esc(v.nama || "Produk")}</div>
+          <div style="font-size:11px;color:var(--muted)">${v.volume ?? 0}mL • ${v.qty ?? 0} pcs</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div class="mono" style="font-weight:700;font-size:13px;color:var(--gold)">${U.rp(subtotal)}</div>
+          <div style="font-size:10px;color:var(--muted)">@ ${U.rp(hppUnit)}</div>
+        </div>
+      </div>`;
+
+    const legalEl = document.getElementById("legalitas-summary");
+    if(legalitasTotal > 0){
+      legalEl.classList.remove("hidden");
+      legalEl.innerHTML = `<div style="padding:12px;background:#F7F4EE;border:1px solid var(--border);border-radius:8px">
+        <div style="font-size:11px;font-weight:700;color:var(--gold);margin-bottom:6px;text-transform:uppercase">Biaya Legalitas</div>
+        ${bpomAktif ? `<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;gap:8px"><span>BPOM (${bpomQty} varian)</span><span class="mono">${U.rp(bpomTotal)}</span></div>` : ""}
+        ${hkiAktif ? `<div style="display:flex;justify-content:space-between;font-size:12px;gap:8px"><span>HKI</span><span class="mono">${U.rp(hkiTotal)}</span></div>` : ""}
+      </div>`;
+    } else legalEl.classList.add("hidden");
+
+    // ADMIN BREAKDOWN
+    const bd = document.getElementById("admin-breakdown");
+    if(bd){
+      if(STATE.isAdmin){
+        const tierLabel = activeTier
+          ? `${activeTier.min}${activeTier.max >= 999999 ? '+' : '-' + activeTier.max} pcs`
+          : "-";
+        bd.classList.remove("hidden");
+        bd.className = "admin-breakdown";
+        bd.innerHTML = `
+          <div class="bd-title">🔍 Rincian HPP (Per Unit)</div>
+          <div class="bd-row"><span>Bibit (${mLBibit.toFixed(2)}mL × ${U.rp(v.hargaBibit||0)})</span><span class="mono">${U.rp(rpBibit)}</span></div>
+          <div class="bd-row"><span>Base (${mLBase.toFixed(2)}mL × ${U.rp(v.hargaBase||0)})</span><span class="mono">${U.rp(rpBase)}</span></div>
+          <div class="bd-row"><span>Botol</span><span class="mono">${U.rp(rpBotol)}</span></div>
+          <div class="bd-row"><span>Kemasan</span><span class="mono">${U.rp(rpKemasan)}</span></div>
+          <div class="bd-row"><span>Stiker</span><span class="mono">${U.rp(rpStiker)}</span></div>
+          <div class="bd-row"><span>Jasa Maklon (${U.esc(jasa.nama)})</span><span class="mono">${U.rp(jasa.harga)}</span></div>
+          <div class="bd-fee">
+            <span>Fee (tier ${tierLabel})</span>
+            <span class="mono">${U.rp(fee)}</span>
+          </div>
+          <div class="bd-hpp"><span>HPP / Unit</span><span class="mono">${U.rp(hppUnit)}</span></div>
+          <div class="bd-row" style="color:#78350f"><span>× Qty</span><span class="mono">${U.num(qty)} pcs</span></div>
+          <div class="bd-row"><span>Subtotal</span><span class="mono">${U.rp(subtotal)}</span></div>
+          ${ppnPct > 0 ? `<div class="bd-row"><span>PPN ${ppnPct}%</span><span class="mono">${U.rp(ppnNominal)}</span></div>` : ""}
+          ${legalitasTotal > 0 ? `<div class="bd-row"><span>Legalitas</span><span class="mono">${U.rp(legalitasTotal)}</span></div>` : ""}
+          <div class="bd-total"><span>TOTAL</span><span class="mono">${U.rp(total)}</span></div>
+        `;
+      } else {
+        bd.classList.add("hidden");
+      }
+    }
+
+    this._calc = {
+      jasa, fee, jasaId, activeTier,
+      konsNama: `${kons.nama} (${pctBibit}%)`,
+      pctBibit, mLBibit, mLBase, rpBibit, rpBase, rpBotol, rpKemasan, rpStiker,
+      hppUnit, qty, subtotal,
+      bpomAktif, bpomQty, bpomTotal, hkiAktif, hkiTotal, legalitasTotal,
+      ppnPct, ppnNominal, total,
+      baseNama: HARDCODED.bases.find(b => b.id === v.baseId)?.nama || "-"
+    };
+  },
+
+  openPin(){
+    if(Date.now() < STATE.pinLockUntil){
+      const s = Math.ceil((STATE.pinLockUntil - Date.now())/1000);
+      toast(`Terkunci ${s} detik`);
+      return;
+    }
+    STATE.pinBuffer = "";
+    document.getElementById("pin-status").innerHTML = "&nbsp;";
+    this.renderPin();
+    document.getElementById("modal-pin").classList.add("show");
+  },
+  closePin(){
+    document.getElementById("modal-pin").classList.remove("show");
+    STATE.pinBuffer = "";
+  },
+  renderPin(){
+    document.getElementById("pin-display").textContent =
+      "•".repeat(STATE.pinBuffer.length) + "·".repeat(Math.max(0,4-STATE.pinBuffer.length));
+  },
+  pinPress(n){ if(STATE.pinBuffer.length < 8) STATE.pinBuffer += n; this.renderPin(); if(STATE.pinBuffer.length >= 4) this.pinSubmit(); },
+  pinClear(){ STATE.pinBuffer = ""; this.renderPin(); },
+  async pinSubmit(){
+    if(Date.now() < STATE.pinLockUntil) return;
+    if(!STATE.pinBuffer) return;
+    const hash = await sha256(STATE.pinBuffer);
+    if(hash === PIN_HASH){
+      STATE.isAdmin = true;
+      STATE.pinBuffer = ""; STATE.pinAttempts = 0;
+      this.closePin();
+      this.showAdminPage();
+      toast("✅ Login berhasil");
+    } else {
+      STATE.pinAttempts++; STATE.pinBuffer = ""; this.renderPin();
+      if(STATE.pinAttempts >= 3){
+        STATE.pinLockUntil = Date.now() + 30000; STATE.pinAttempts = 0;
+        document.getElementById("pin-status").innerHTML = `<span style="color:var(--danger)">3x salah. Terkunci 30 detik.</span>`;
+      } else {
+        document.getElementById("pin-status").innerHTML = `<span style="color:var(--danger)">PIN salah (${STATE.pinAttempts}/3)</span>`;
+      }
+    }
+  },
+
+  showAdminPage(){
+    document.getElementById("page-simulasi").classList.add("hidden");
+    document.getElementById("page-admin").classList.remove("hidden");
+    this.admTab("pengaturan");
+    this.renderAdminPengaturan();
+    this.updateAdminUI();
+  },
+
+  showSimulasiPage(){
+    document.getElementById("page-admin").classList.add("hidden");
+    document.getElementById("page-simulasi").classList.remove("hidden");
+    this.updateAdminUI();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  },
+
+  updateAdminUI(){
+    const btnLogin = document.getElementById("btn-to-admin-login");
+    const btnAdmin = document.getElementById("btn-to-admin");
+    if(btnLogin) btnLogin.classList.toggle("hidden", STATE.isAdmin);
+    if(btnAdmin) btnAdmin.classList.toggle("hidden", !STATE.isAdmin);
+    this.hitungAll();
+  },
+
+  logoutAdmin(){
+    if(!confirm("Logout dari Admin?")) return;
+    STATE.isAdmin = false;
+    document.getElementById("page-admin").classList.add("hidden");
+    document.getElementById("page-simulasi").classList.remove("hidden");
+    this.updateAdminUI();
+    toast("Logout");
+  },
+
+  admTab(tab){
+    document.querySelectorAll(".adm-tab").forEach(t => t.classList.toggle("active", t.dataset.admTab === tab));
+    ["pengaturan","riwayat","logo"].forEach(t => {
+      document.getElementById("adm-page-" + t).classList.toggle("hidden", t !== tab);
+    });
+    if(tab === "riwayat") this.loadRiwayat();
+    if(tab === "logo") this.renderLogoHeader();
+  },
+
+  renderAdminPengaturan(){
+    const jasa = STATE.settings.jasa_maklon || [];
+    document.getElementById("adm-jasa-list").innerHTML = jasa.map((j, i) => `
+      <div style="display:grid;grid-template-columns:1fr 100px 32px;gap:6px;margin-bottom:6px;align-items:center">
+        <input class="inp" value="${U.esc(j.nama)}" onchange="App.editJasa(${i},'nama',this.value)" style="min-height:36px;padding:6px 10px">
+        <input class="inp mono" type="number" value="${j.harga||0}" onchange="App.editJasa(${i},'harga',this.value)" style="min-height:36px;padding:6px 10px">
+        <button onclick="App.delJasa(${i})" class="btn btn-danger btn-xs" style="padding:4px 8px">×</button>
+      </div>`).join("") || '<p style="font-size:12px;color:var(--muted)">Belum ada jasa</p>';
+
+    // Fee tiers
+    const tiers = (STATE.settings.fee_tiers || []).slice().sort((a,b) => a.min - b.min);
+    document.getElementById("adm-fee-tiers").innerHTML = tiers.map((t, idx) => {
+      const i = STATE.settings.fee_tiers.indexOf(t);
+      return `
+        <div class="fee-tier-row">
+          <input class="inp mono" type="number" value="${t.min}" onchange="App.editFeeTier(${i},'min',this.value)" placeholder="100">
+          <input class="inp mono" type="number" value="${t.max}" onchange="App.editFeeTier(${i},'max',this.value)" placeholder="999999">
+          <input class="inp mono" type="number" value="${t.fee}" onchange="App.editFeeTier(${i},'fee',this.value)" placeholder="1000">
+          <button onclick="App.delFeeTier(${i})" class="btn btn-danger btn-xs" style="padding:4px 8px">×</button>
+        </div>`;
+    }).join("") || '<p style="font-size:12px;color:var(--muted);margin-bottom:8px">Belum ada tier</p>';
+
+    document.getElementById("adm-bpom").value = STATE.settings.bpom_price || 0;
+    document.getElementById("adm-hki").value = STATE.settings.hki_price || 0;
+    document.getElementById("adm-ppn").value = STATE.settings.ppn || 11;
+  },
+
+  editJasa(i, key, val){
+    const numKeys = ["harga"];
+    STATE.settings.jasa_maklon[i][key] = numKeys.includes(key) ? (parseFloat(val)||0) : val;
+  },
+  addJasa(){
+    STATE.settings.jasa_maklon.push({ id: "j_"+Date.now(), nama: "Jasa Baru", harga: 0 });
+    this.renderAdminPengaturan();
+  },
+  delJasa(i){
+    if(!confirm("Hapus jasa ini?")) return;
+    STATE.settings.jasa_maklon.splice(i, 1);
+    this.renderAdminPengaturan();
+  },
+
+  editFeeTier(i, key, val){
+    STATE.settings.fee_tiers[i][key] = parseFloat(val) || 0;
+  },
+  addFeeTier(){
+    if(!Array.isArray(STATE.settings.fee_tiers)) STATE.settings.fee_tiers = [];
+    // Auto-fill min dari max tier terakhir + 1
+    const sorted = [...STATE.settings.fee_tiers].sort((a,b) => a.min - b.min);
+    const last = sorted[sorted.length - 1];
+    const newMin = last ? last.max + 1 : 100;
+    STATE.settings.fee_tiers.push({ min: newMin, max: newMin + 99, fee: 0 });
+    this.renderAdminPengaturan();
+  },
+  delFeeTier(i){
+    if(!confirm("Hapus tier ini?")) return;
+    STATE.settings.fee_tiers.splice(i, 1);
+    this.renderAdminPengaturan();
+  },
+
+  async savePengaturan(){
+    const jasa = STATE.settings.jasa_maklon;
+    const feeTiers = STATE.settings.fee_tiers;
+    const bpom = parseFloat(document.getElementById("adm-bpom").value) || 0;
+    const hki = parseFloat(document.getElementById("adm-hki").value) || 0;
+    const ppn = parseFloat(document.getElementById("adm-ppn").value) || 11;
+
+    // Validasi jasa
+    for(const j of jasa){
+      if(!j.nama?.trim()){ toast("Nama jasa tidak boleh kosong"); return; }
+      if(j.harga === null || j.harga === undefined || isNaN(j.harga)){ toast("Harga jasa tidak valid"); return; }
+    }
+
+    // Validasi fee tiers
+    for(const t of feeTiers){
+      if(t.min === null || t.max === null || t.fee === null || isNaN(t.min) || isNaN(t.max) || isNaN(t.fee)){
+        toast("Semua field fee tier wajib diisi"); return;
+      }
+      if(t.min > t.max){ toast(`Min (${t.min}) tidak boleh > Max (${t.max})`); return; }
+    }
+    // Cek overlap
+    const sorted = [...feeTiers].sort((a,b) => a.min - b.min);
+    for(let i = 0; i < sorted.length - 1; i++){
+      if(sorted[i].max >= sorted[i+1].min){
+        toast(`Tier overlap: ${sorted[i].min}-${sorted[i].max} dengan ${sorted[i+1].min}-${sorted[i+1].max}`);
+        return;
+      }
+    }
+
+    toast("⏳ Menyimpan...");
+    try {
+      const { error } = await db.from('scentia_settings').update({
+        jasa_maklon: jasa, fee_tiers: feeTiers,
+        bpom_price: bpom, hki_price: hki, ppn,
+        updated_at: new Date().toISOString()
+      }).eq('id', 1);
+      if(error) throw error;
+      STATE.settings.jasa_maklon = jasa;
+      STATE.settings.fee_tiers = feeTiers;
+      STATE.settings.bpom_price = bpom;
+      STATE.settings.hki_price = hki;
+      STATE.settings.ppn = ppn;
+      document.getElementById("lbl-ppn-pct").textContent = ppn;
+      this.renderJasaDropdown();
+      this.renderAdminPengaturan();
+      this.renderVarian();
+      this.hitungAll();
+      toast("✅ Pengaturan disimpan");
+    } catch(err){
+      console.error(err);
+      toast("❌ Gagal simpan: " + err.message);
+    }
+  },
+
+  async loadRiwayat(){
+    const list = document.getElementById("adm-riwayat-list");
+    list.innerHTML = `<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>`;
+    try {
+      const { data, error } = await db.from('scentia_quotations').select('*').order('created_at', { ascending: false }).limit(100);
+      if(error) throw error;
+      STATE.riwayat = data || [];
+      this.renderRiwayat();
+    } catch(err){
+      console.error(err);
+      list.innerHTML = `<p style="color:var(--danger);font-size:13px;text-align:center;padding:20px">Gagal load: ${U.esc(err.message)}</p>`;
+    }
+  },
+
+  renderRiwayat(){
+    const list = document.getElementById("adm-riwayat-list");
+    if(!STATE.riwayat.length){
+      list.innerHTML = `<p style="color:var(--muted);font-size:13px;text-align:center;padding:30px">Belum ada riwayat penawaran</p>`;
+      return;
+    }
+    list.innerHTML = STATE.riwayat.map(q => `
+      <div class="hist-item">
+        <div class="hist-info">
+          <div class="hist-title">${U.esc(q.client?.nama || "Tanpa Nama")} ${q.client?.brand ? `<span style="color:var(--muted);font-weight:400"> — ${U.esc(q.client.brand)}</span>` : ""}</div>
+          <div class="hist-meta">${q.varian?.nama || "-"} • ${q.varian?.qty || 0} pcs • ${U.date(q.created_at)}</div>
+        </div>
+        <div class="hist-total">${U.rp(q.grand_total)}</div>
+        <div class="hist-actions">
+          <button onclick="App.viewRiwayat('${q.id}')" class="btn btn-outline btn-xs" title="Lihat PDF">📄 PDF</button>
+          <button onclick="App.editRiwayat('${q.id}')" class="btn btn-outline btn-xs" title="Edit">✏️</button>
+          <button onclick="App.delRiwayat('${q.id}')" class="btn btn-danger btn-xs" title="Hapus">🗑️</button>
+        </div>
+      </div>`).join("");
+  },
+
+  viewRiwayat(id){
+    const q = STATE.riwayat.find(x => x.id === id);
+    if(!q) return;
+    document.getElementById("doc-preview").innerHTML = this.buildDokumenFromQuotation(q);
+    document.getElementById("modal-pdf").classList.add("show");
+    this._currentPDF = q;
+  },
+
+  editRiwayat(id){
+    const q = STATE.riwayat.find(x => x.id === id);
+    if(!q) return;
+    STATE.editingQuotationId = q.id;
+    document.getElementById("kl-nama").value = q.client?.nama || "";
+    document.getElementById("kl-brand").value = q.client?.brand || "";
+    document.getElementById("kl-kontak").value = q.client?.kontak || "";
+    document.getElementById("kl-alamat").value = q.client?.alamat || "";
+    document.getElementById("global-jasa").value = q.jasa?.id || "";
+    STATE.varian = {
+      id: uid(),
+      nama: q.varian?.nama || "",
+      volume: q.varian?.volume ?? 32,
+      konsId: q.varian?.konsId || "edp",
+      customPct: q.varian?.customPct ?? null,
+      baseId: q.varian?.baseId || "base_parfum",
+      hargaBibit: q.varian?.hargaBibit ?? 850,
+      hargaBase: q.varian?.hargaBase ?? 50,
+      botolNama: q.varian?.botolNama || "",
+      botolHarga: q.varian?.botolHarga ?? null,
+      kemasanNama: q.varian?.kemasanNama || "",
+      kemasanHarga: q.varian?.kemasanHarga ?? null,
+      stikerNama: q.varian?.stikerNama || "",
+      stikerHarga: q.varian?.stikerHarga ?? null,
+      qty: q.varian?.qty ?? 1000,
+    };
+    document.getElementById("bpom-aktif").checked = !!q.legal?.bpomAktif;
+    document.getElementById("bpom-qty").value = q.legal?.bpomQty || 1;
+    document.getElementById("hki-aktif").checked = !!q.legal?.hkiAktif;
+    document.getElementById("in-ppn").checked = (q.totals?.ppnPct || 0) > 0;
+    this.showSimulasiPage();
+    this.renderVarian(); this.hitungAll();
+    document.getElementById("btn-save").textContent = "💾 Update Penawaran";
+    toast("✏️ Mode edit aktif — ubah & simpan");
+  },
+
+  async delRiwayat(id){
+    if(!confirm("Hapus penawaran ini?")) return;
+    try {
+      const { error } = await db.from('scentia_quotations').delete().eq('id', id);
+      if(error) throw error;
+      toast("✅ Dihapus");
+      this.loadRiwayat();
+    } catch(err){
+      toast("❌ Gagal hapus: " + err.message);
+    }
+  },
+
+  async saveQuotation(){
+    if(!this._calc){ toast("Lengkapi dulu"); return; }
+    const v = STATE.varian;
+    const c = this._calc;
+
+    if(!v.nama?.trim()){ toast("Nama aroma wajib"); return; }
+    if(v.volume === null || v.volume === undefined){ toast("Volume wajib"); return; }
+    if(v.qty === null || v.qty === undefined){ toast("Qty wajib"); return; }
+
+    const quotation = {
+      client: {
+        nama: document.getElementById("kl-nama").value.trim(),
+        brand: document.getElementById("kl-brand").value.trim(),
+        kontak: document.getElementById("kl-kontak").value.trim(),
+        alamat: document.getElementById("kl-alamat").value.trim(),
+      },
+      jasa: { id: c.jasaId, nama: c.jasa.nama, harga: c.jasa.harga },
+      varian: {
+        nama: v.nama, volume: v.volume, konsId: v.konsId, customPct: v.customPct,
+        konsNama: c.konsNama, baseId: v.baseId, baseNama: c.baseNama,
+        hargaBibit: v.hargaBibit, hargaBase: v.hargaBase,
+        botolNama: v.botolNama, botolHarga: v.botolHarga,
+        kemasanNama: v.kemasanNama, kemasanHarga: v.kemasanHarga,
+        stikerNama: v.stikerNama, stikerHarga: v.stikerHarga,
+        qty: v.qty,
+      },
+      legal: {
+        bpomAktif: c.bpomAktif, bpomQty: c.bpomQty, bpomTotal: c.bpomTotal,
+        hkiAktif: c.hkiAktif, hkiTotal: c.hkiTotal,
+      },
+      totals: {
+        subtotal: c.subtotal, fee: c.fee, feeTier: c.activeTier, hppUnit: c.hppUnit,
+        ppnPct: c.ppnPct, ppnNominal: c.ppnNominal,
+        legalitasTotal: c.legalitasTotal, total: c.total,
+      },
+      grand_total: c.total,
+    };
+
+    toast("⏳ Menyimpan...");
+    try {
+      if(STATE.editingQuotationId){
+        const { error } = await db.from('scentia_quotations').update({
+          ...quotation, updated_at: new Date().toISOString()
+        }).eq('id', STATE.editingQuotationId);
+        if(error) throw error;
+        toast("✅ Penawaran diupdate");
+      } else {
+        const { error } = await db.from('scentia_quotations').insert([quotation]);
+        if(error) throw error;
+        toast("✅ Penawaran disimpan");
+      }
+      STATE.editingQuotationId = null;
+      document.getElementById("btn-save").textContent = "💾 Simpan Penawaran";
+    } catch(err){
+      console.error(err);
+      toast("❌ Gagal simpan: " + err.message);
+    }
+  },
+
+  previewPDF(){
+    if(!this._calc) return toast("Lengkapi dulu");
+    const quotation = this.buildQuotationFromForm();
+    document.getElementById("doc-preview").innerHTML = this.buildDokumenFromQuotation(quotation);
+    document.getElementById("modal-pdf").classList.add("show");
+    this._currentPDF = quotation;
+  },
+  closePDF(){ document.getElementById("modal-pdf").classList.remove("show"); },
+
+  buildQuotationFromForm(){
+    const v = STATE.varian;
+    const c = this._calc;
+    return {
+      client: {
+        nama: document.getElementById("kl-nama").value.trim(),
+        brand: document.getElementById("kl-brand").value.trim(),
+        kontak: document.getElementById("kl-kontak").value.trim(),
+        alamat: document.getElementById("kl-alamat").value.trim(),
+      },
+      jasa: { id: c.jasaId, nama: c.jasa.nama, harga: c.jasa.harga },
+      varian: {
+        nama: v.nama, volume: v.volume, konsNama: c.konsNama, baseNama: c.baseNama,
+        botolNama: v.botolNama, kemasanNama: v.kemasanNama, stikerNama: v.stikerNama,
+        qty: v.qty, hargaBibit: v.hargaBibit, hargaBase: v.hargaBase,
+        botolHarga: v.botolHarga, kemasanHarga: v.kemasanHarga, stikerHarga: v.stikerHarga,
+      },
+      legal: {
+        bpomAktif: c.bpomAktif, bpomQty: c.bpomQty, bpomTotal: c.bpomTotal,
+        hkiAktif: c.hkiAktif, hkiTotal: c.hkiTotal,
+      },
+      totals: {
+        subtotal: c.subtotal, fee: c.fee, hppUnit: c.hppUnit,
+        ppnPct: c.ppnPct, ppnNominal: c.ppnNominal,
+        legalitasTotal: c.legalitasTotal, total: c.total,
+      },
+      grand_total: c.total,
+      created_at: new Date().toISOString(),
+    };
+  },
+
+  buildDokumenFromQuotation(q){
+    const kop = HARDCODED.kop;
+    const logo = STATE.settings?.logo_url;
+    const c = q.totals;
+    const tgl = new Date(q.created_at).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
+    const no = "PEN/" + new Date(q.created_at).getFullYear() + "/" + (q.id || Date.now()).toString().slice(-4).toUpperCase();
+
+    return `
+      <div style="padding:32px;font-family:'Plus Jakarta Sans',sans-serif;color:#1C1A17;background:#fff">
+        <div style="display:flex;align-items:center;gap:16px;padding-bottom:16px;border-bottom:2px solid #1C1A17">
+          ${logo ? `<img src="${logo}" style="width:70px;height:70px;object-fit:contain;border-radius:6px;flex-shrink:0">` : `<div style="width:70px;height:70px;background:linear-gradient(135deg,#D4B875,#B08D4F);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:28px;flex-shrink:0">S</div>`}
+          <div style="flex:1;min-width:0">
+            <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:#B08D4F">${U.esc(kop.company)}</div>
+            <div style="font-size:11px;font-style:italic;color:#57524A;margin-top:2px">${U.esc(kop.tagline)}</div>
+            <div style="font-size:10px;color:#57524A;margin-top:6px;line-height:1.4">${U.esc(kop.address)}</div>
+            <div style="font-size:10px;color:#57524A;margin-top:2px">${U.esc(kop.phone)} • ${U.esc(kop.email)} • ${U.esc(kop.website)}</div>
+          </div>
+        </div>
+
+        <div style="text-align:center;margin:24px 0 20px">
+          <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;letter-spacing:2px;color:#1C1A17">PENAWARAN HARGA</div>
+          <div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#57524A;margin-top:2px">Maklon Parfum</div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;font-size:11px">
+          <div>
+            <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#94a3b8;font-weight:700;margin-bottom:4px">Kepada</div>
+            <div style="font-weight:700;font-size:13px">${U.esc(q.client?.nama || "-")}</div>
+            ${q.client?.brand ? `<div style="color:#57524A">Brand: <b>${U.esc(q.client.brand)}</b></div>` : ""}
+            ${q.client?.kontak ? `<div style="color:#57524A">${U.esc(q.client.kontak)}</div>` : ""}
+            ${q.client?.alamat ? `<div style="color:#57524A">${U.esc(q.client.alamat)}</div>` : ""}
+          </div>
+          <div style="background:#FDFCFA;border-radius:6px;padding:10px;border:1px solid #E7E1D8">
+            <div style="display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:10px">
+              <div style="color:#57524A">No.</div><div style="font-weight:700;font-family:ui-monospace,monospace">${no}</div>
+              <div style="color:#57524A">Tanggal</div><div style="font-weight:600">${tgl}</div>
+              <div style="color:#57524A">Berlaku</div><div style="font-weight:600">14 hari</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="padding:8px 12px;background:#FDFCFA;border:1px solid #E7E1D8;border-radius:6px;font-size:10px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:16px">
+          <div>🛠️ <b>Jasa Maklon:</b> ${U.esc(q.jasa?.nama || "-")}</div>
+          <div>📦 <b>Total Qty:</b> ${U.num(q.varian?.qty || 0)} pcs</div>
+        </div>
+
+        <table style="width:100%;border-collapse:collapse;font-size:10px">
+          <thead>
+            <tr>
+              <th style="text-align:left;padding:8px 6px;border-bottom:2px solid #1C1A17;font-size:9px;text-transform:uppercase;color:#57524A;letter-spacing:0.5px">Aroma & Spesifikasi</th>
+              <th style="text-align:center;padding:8px 6px;border-bottom:2px solid #1C1A17;width:50px;font-size:9px;text-transform:uppercase;color:#57524A">Qty</th>
+              <th style="text-align:right;padding:8px 6px;border-bottom:2px solid #1C1A17;width:80px;font-size:9px;text-transform:uppercase;color:#57524A">Harga</th>
+              <th style="text-align:right;padding:8px 6px;border-bottom:2px solid #1C1A17;width:90px;font-size:9px;text-transform:uppercase;color:#57524A">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="padding:10px 6px;border-bottom:1px solid #E7E1D8">
+                <div style="font-weight:700;font-size:11px">${U.esc(q.varian?.nama || "-")}</div>
+                <div style="font-size:9px;color:#57524A;margin-top:2px">${q.varian?.volume || 0}mL ${U.esc(q.varian?.konsNama || "")} — ${U.esc(q.varian?.baseNama || "")}</div>
+                <div style="font-size:9px;color:#57524A">Botol: ${U.esc(q.varian?.botolNama || "-")}${q.varian?.kemasanNama?` • Kemasan: ${U.esc(q.varian.kemasanNama)}`:""}${q.varian?.stikerNama?` • Stiker: ${U.esc(q.varian.stikerNama)}`:""}</div>
+              </td>
+              <td style="padding:10px 6px;border-bottom:1px solid #E7E1D8;text-align:center">${U.num(q.varian?.qty || 0)}</td>
+              <td style="padding:10px 6px;border-bottom:1px solid #E7E1D8;text-align:right;font-family:ui-monospace,monospace">${U.rp(c?.hppUnit || 0)}</td>
+              <td style="padding:10px 6px;border-bottom:1px solid #E7E1D8;text-align:right;font-family:ui-monospace,monospace;font-weight:600">${U.rp(c?.subtotal || 0)}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px">
+          <div>
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#B08D4F;margin-bottom:4px">Termin Pembayaran</div>
+            <div style="font-size:10px;color:#57524A;line-height:1.6">• DP 50% saat order<br>• Pelunasan 50% saat kirim</div>
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#B08D4F;margin-top:12px;margin-bottom:4px">Syarat & Ketentuan</div>
+            <div style="font-size:10px;color:#57524A;line-height:1.6">• Harga belum termasuk ongkir<br>• Produksi 7-14 hari kerja</div>
+          </div>
+          <div>
+            <div style="padding:12px;background:#FDFCFA;border-radius:6px;border:1px solid #E7E1D8">
+              <div style="display:flex;justify-content:space-between;padding:3px 0;font-size:10px;gap:6px"><span style="color:#57524A">Subtotal (${U.num(q.varian?.qty || 0)} pcs)</span><span style="font-family:ui-monospace,monospace">${U.rp(c?.subtotal || 0)}</span></div>
+              ${c?.ppnPct > 0 ? `<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:10px;gap:6px"><span style="color:#57524A">PPN ${c.ppnPct}%</span><span style="font-family:ui-monospace,monospace">${U.rp(c.ppnNominal || 0)}</span></div>` : ""}
+              ${c?.legalitasTotal > 0 ? `<div style="display:flex;justify-content:space-between;padding:6px 0 3px;font-size:10px;border-top:1px dashed #E7E1D8;margin-top:4px;gap:6px"><span style="color:#57524A">Legalitas</span><span style="font-family:ui-monospace,monospace">${U.rp(c.legalitasTotal)}</span></div>` : ""}
+            </div>
+            <div style="background:linear-gradient(135deg,#D4B875,#B08D4F);color:#fff;padding:12px;border-radius:6px;margin-top:8px">
+              <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;opacity:.9">TOTAL</div>
+              <div style="font-size:18px;font-weight:700;font-family:ui-monospace,monospace">${U.rp(c?.total || 0)}</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:20px;font-size:9px;color:#94a3b8;text-align:center;border-top:1px solid #E7E1D8;padding-top:10px">
+          Dokumen ini dibuat otomatis. Harga estimasi. Hubungi kami untuk penawaran resmi.
+        </div>
+      </div>`;
+  },
+
+  async downloadPDF(){
+    const el = document.getElementById("doc-preview");
+    if(!el || !el.innerHTML.trim()) return toast("Preview dulu");
+    toast("Menyiapkan PDF...");
+    try {
+      const clone = el.cloneNode(true);
+      clone.style.cssText = 'position:fixed;left:-9999px;top:0;width:800px;background:#fff;padding:32px';
+      document.body.appendChild(clone);
+      await new Promise(r => setTimeout(r, 100));
+      const canvas = await html2canvas(clone, { scale: 2, backgroundColor: "#fff", useCORS: true });
+      document.body.removeChild(clone);
+      const imgData = canvas.toDataURL("image/jpeg", 0.92);
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF("p", "mm", "a4", true);
+      const pw = pdf.internal.pageSize.getWidth(), ph = pdf.internal.pageSize.getHeight();
+      const iw = pw, ih = canvas.height * iw / canvas.width;
+      let hl = ih, pos = 0;
+      pdf.addImage(imgData, "JPEG", 0, pos, iw, ih, undefined, "FAST");
+      hl -= ph;
+      while(hl > 0){ pos = hl - ih; pdf.addPage(); pdf.addImage(imgData, "JPEG", 0, pos, iw, ih, undefined, "FAST"); hl -= ph; }
+      pdf.save(`Penawaran-Scentia-${Date.now()}.pdf`);
+      toast("✅ PDF diunduh");
+    } catch(e){
+      console.error(e);
+      toast("Gagal buat PDF");
+    }
+  },
+
+  chatWA(){
+    if(!this._calc) return toast("Lengkapi dulu");
+    const v = STATE.varian, c = this._calc;
+    const kl = document.getElementById("kl-nama").value.trim() || "-";
+    const msg = `Halo Scentia, saya ${kl}.\n\nSimulasi Maklon:\nAroma: ${v.nama || "-"}\nVolume: ${v.volume}mL ${c.konsNama}\nQty: ${v.qty} pcs\nHPP/unit: ${U.rp(c.hppUnit)}\nSubtotal: ${U.rp(c.subtotal)}\n\nTotal: ${U.rp(c.total)}\n\nMohon info lebih lanjut.`;
+    const nomor = "6285743243378";
+    window.open(`https://wa.me/${nomor}?text=${encodeURIComponent(msg)}`, "_blank");
+  },
+};
+
+document.addEventListener("DOMContentLoaded", () => App.init());
+</script>
+</body>
+</html>
